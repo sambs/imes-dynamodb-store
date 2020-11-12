@@ -1,0 +1,31 @@
+{
+  "name": "imes-dynamodb-store",
+  "description": "DynamoDB store for Imes",
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "npm run clean && tsc",
+    "clean": "rimraf dist/*",
+    "prepublish": "npm run build",
+    "prettify": "prettier --write 'src/**/*.ts'",
+    "test": "jest"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.706.0",
+    "imes": "^0.13.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.3",
+    "@types/node": "^12.7.4",
+    "husky": "^4.2.5",
+    "jest": "^26.1.0",
+    "lint-staged": "^10.2.11",
+    "prettier": "^2.0.5",
+    "rimraf": "^3.0.0",
+    "ts-jest": "^26.1.1",
+    "typescript": "^3.5.3"
+  }
+}
