@@ -1,29 +1,43 @@
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 import { Query, Store } from 'imes'
 
-export interface DynamoDBStoreOptions<I extends {}, K> {
+export interface DynamoDBStoreOptions<
+  I extends {},
+  PK extends keyof I,
+  SK extends keyof I | undefined = undefined
+> {
   client: DocumentClient
-  getItemKey: (item: I) => any
-  serializeKey: (key: K) => any
+  partitionKey: PK
+  sortKey: SK
   tableName: string
 }
 
-export class DynamoDBStore<I extends {}, K, Q extends Query>
-  implements Store<I, K, Q> {
+export type DynamoDBStoreKey<
+  I extends {},
+  PK extends keyof I,
+  SK extends keyof I | undefined = undefined
+> = SK extends undefined ? I[PK] : Pick<I, PK | (SK & string)>
+
+export class DynamoDBStore<
+  I extends {},
+  Q extends Query,
+  PK extends keyof I,
+  SK extends keyof I | undefined = undefined
+> implements Store<I, DynamoDBStoreKey<I, PK, SK>, Q> {
   client: DocumentClient
-  getItemKey: (item: I) => any
-  serializeKey: (key: K) => any
+  partitionKey: PK
+  sortKey: SK
   tableName: string
 
   constructor({
     client,
-    getItemKey,
-    serializeKey,
+    partitionKey,
+    sortKey,
     tableName,
-  }: DynamoDBStoreOptions<I, K>) {
+  }: DynamoDBStoreOptions<I, PK, SK>) {
     this.client = client
-    this.getItemKey = getItemKey
-    this.serializeKey = serializeKey
+    this.partitionKey = partitionKey
+    this.sortKey = sortKey
     this.tableName = tableName
   }
 
@@ -35,11 +49,11 @@ export class DynamoDBStore<I extends {}, K, Q extends Query>
     return item
   }
 
-  async get(key: K) {
+  async get(key: DynamoDBStoreKey<I, PK, SK>) {
     return this.client
       .get({
         TableName: this.tableName,
-        Key: this.serializeKey(key),
+        Key: this.sortKey ? key : { [this.partitionKey]: key },
       })
       .promise()
       .then(({ Item }) => {
@@ -61,7 +75,18 @@ export class DynamoDBStore<I extends {}, K, Q extends Query>
       .then(() => undefined)
   }
 
-  cursorToKey(cursor: string): K {
+  getItemKey(item: I) {
+    return (this.sortKey
+      ? {
+          [this.partitionKey]: item[this.partitionKey],
+          [this.sortKey as string]: item[this.sortKey as keyof I],
+        }
+      : {
+          [this.partitionKey]: item[this.partitionKey],
+        }) as DynamoDBStoreKey<I, PK, SK>
+  }
+
+  cursorToKey(cursor: string): DynamoDBStoreKey<I, PK, SK> {
     try {
       return JSON.parse(Buffer.from(cursor, 'base64').toString('utf8'))
     } catch (error) {

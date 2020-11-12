@@ -1,14 +1,15 @@
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 import { DynamoDBStore } from '../src'
+import { Query } from 'imes'
 
 jest.mock('aws-sdk/clients/dynamodb')
 
 const client = {} as jest.Mocked<DocumentClient>
 
-const store = new DynamoDBStore<User, string, {}>({
+const store = new DynamoDBStore<User, Query, 'teamId', 'id'>({
   client,
-  getItemKey: item => ({ id: item.id }),
-  serializeKey: id => ({ id }),
+  partitionKey: 'teamId',
+  sortKey: 'id',
   tableName: 'users',
 })
 
@@ -17,9 +18,10 @@ const commonQueryParams = {
 }
 
 interface UserData {
+  age: number | null
   id: string
   name: string
-  age: number | null
+  teamId: string
 }
 
 interface UserMeta {
@@ -33,6 +35,7 @@ const user1: User = {
   createdAt: 'yesterday',
   id: 'u1',
   name: 'Trevor',
+  teamId: 't1',
 }
 
 const user2: User = {
@@ -40,6 +43,7 @@ const user2: User = {
   createdAt: 'today',
   id: 'u2',
   name: 'Whatever',
+  teamId: 't2',
 }
 
 const user3: User = {
@@ -47,12 +51,13 @@ const user3: User = {
   createdAt: 'now',
   id: 'u3',
   name: 'Eternal',
+  teamId: 't1',
 }
 
 const cursors = {
-  u1: 'eyJpZCI6InUxIn0=',
-  u2: 'eyJpZCI6InUyIn0=',
-  u3: 'eyJpZCI6InUzIn0=',
+  u1: 'eyJ0ZWFtSWQiOiJ0MSIsImlkIjoidTEifQ==',
+  u2: 'eyJ0ZWFtSWQiOiJ0MiIsImlkIjoidTIifQ==',
+  u3: 'eyJ0ZWFtSWQiOiJ0MSIsImlkIjoidTMifQ==',
 }
 
 test('AuroraPostgresStore#create', async () => {
@@ -86,11 +91,11 @@ test('AuroraPostgresStore#get', async () => {
     promise: jest.fn().mockResolvedValue({ Item: user1 }),
   })) as any
 
-  expect(await store.get('u1')).toEqual(user1)
+  expect(await store.get({ teamId: 't1', id: 'u1' })).toEqual(user1)
 
   expect(client.get).toHaveBeenCalledWith({
     ...commonQueryParams,
-    Key: { id: 'u1' },
+    Key: { teamId: 't1', id: 'u1' },
   })
 })
 
@@ -99,7 +104,7 @@ test('AuroraPostgresStore#get a non existant key', async () => {
     promise: jest.fn().mockResolvedValue({}),
   })) as any
 
-  expect(await store.get('dne')).toEqual(undefined)
+  expect(await store.get({ teamId: 't1', id: 'dne' })).toEqual(undefined)
 })
 
 test('AuroraPostgresStore#find', async () => {
@@ -126,7 +131,7 @@ test('AuroraPostgresStore#find with limit', async () => {
   client.scan = jest.fn(() => ({
     promise: jest.fn().mockResolvedValue({
       Items: [user1, user2],
-      LastEvaluatedKey: { id: 'u2' },
+      LastEvaluatedKey: { teamId: 't2', id: 'u2' },
     }),
   })) as any
 
@@ -162,6 +167,6 @@ test('AuroraPostgresStore#find with limit and cursor', async () => {
   expect(client.scan).toHaveBeenCalledWith({
     ...commonQueryParams,
     Limit: 2,
-    ExclusiveStartKey: { id: 'u1' },
+    ExclusiveStartKey: { teamId: 't1', id: 'u1' },
   })
 })
