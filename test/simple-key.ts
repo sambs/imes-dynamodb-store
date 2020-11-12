@@ -1,13 +1,17 @@
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
-import { DynamoDBStore } from '../src'
-import { Query } from 'imes'
+import { DynamoDBStore, exactFilters, ordFilters } from '../src'
+import { Query, ExactFilter, OrdFilter } from 'imes'
 
 jest.mock('aws-sdk/clients/dynamodb')
 
 const client = {} as jest.Mocked<DocumentClient>
 
-const store = new DynamoDBStore<User, Query, 'id'>({
+const store = new DynamoDBStore<User, UserQuery, 'id'>({
   client,
+  filters: {
+    name: exactFilters('name'),
+    age: ordFilters('age'),
+  },
   partitionKey: 'id',
   sortKey: undefined,
   tableName: 'users',
@@ -28,6 +32,13 @@ interface UserMeta {
 }
 
 type User = UserData & UserMeta
+
+interface UserQuery extends Query {
+  filter?: {
+    name?: ExactFilter<string>
+    age?: OrdFilter<number>
+  }
+}
 
 const user1: User = {
   age: 47,
@@ -164,5 +175,52 @@ test('AuroraPostgresStore#find with limit and cursor', async () => {
     ...commonQueryParams,
     Limit: 2,
     ExclusiveStartKey: { id: 'u1' },
+  })
+})
+
+test('AuroraPostgresStore#find with eq filter', async () => {
+  client.scan = jest.fn(() => ({
+    promise: jest.fn().mockResolvedValue({ Items: [user3] }),
+  })) as any
+
+  expect(await store.find({ filter: { name: { eq: 'Eternal' } } })).toEqual({
+    cursor: null,
+    edges: [{ cursor: cursors.u3, node: user3 }],
+    items: [user3],
+  })
+
+  expect(client.scan).toHaveBeenCalledWith({
+    ...commonQueryParams,
+    FilterExpression: '#name = :name_eq',
+    ExpressionAttributeNames: {
+      '#name': 'name',
+    },
+    ExpressionAttributeValues: {
+      ':name_eq': 'Eternal',
+    },
+  })
+})
+
+test('AuroraPostgresStore#find with multiple filters', async () => {
+  client.scan = jest.fn(() => ({
+    promise: jest.fn().mockResolvedValue({ Items: [user1] }),
+  })) as any
+
+  expect(await store.find({ filter: { age: { gte: 40, lt: 60 } } })).toEqual({
+    cursor: null,
+    edges: [{ cursor: cursors.u1, node: user1 }],
+    items: [user1],
+  })
+
+  expect(client.scan).toHaveBeenCalledWith({
+    ...commonQueryParams,
+    FilterExpression: '#age < :age_lt and #age >= :age_gte',
+    ExpressionAttributeNames: {
+      '#age': 'age',
+    },
+    ExpressionAttributeValues: {
+      ':age_gte': 40,
+      ':age_lt': 60,
+    },
   })
 })
