@@ -14,18 +14,18 @@
     "test": "jest"
   },
   "dependencies": {
-    "aws-sdk": "^2.706.0",
-    "imes": "^0.13.0"
+    "aws-sdk": "^2.791.0",
+    "imes": "^0.14.0"
   },
   "devDependencies": {
     "@types/jest": "^26.0.3",
-    "@types/node": "^12.7.4",
+    "@types/node": "^14.14.7",
     "husky": "^4.2.5",
     "jest": "^26.1.0",
     "lint-staged": "^10.2.11",
     "prettier": "^2.0.5",
     "rimraf": "^3.0.0",
     "ts-jest": "^26.1.1",
-    "typescript": "^3.5.3"
+    "typescript": "^4.0.5"
   }
 }
