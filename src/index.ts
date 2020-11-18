@@ -43,7 +43,7 @@ export class DynamoDBStore<
   Q extends Query,
   PK extends keyof I,
   SK extends keyof I | undefined = undefined
-> implements Store<I, DynamoDBStoreKey<I, PK, SK>, Q> {
+> extends Store<I, DynamoDBStoreKey<I, PK, SK>, Q> {
   client: DocumentClient
   filters: DynamoDBFilters<Q>
   partitionKey: PK
@@ -57,6 +57,7 @@ export class DynamoDBStore<
     sortKey,
     tableName,
   }: DynamoDBStoreOptions<I, Q, PK, SK>) {
+    super()
     this.client = client
     this.filters = filters
     this.partitionKey = partitionKey

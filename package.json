@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.791.0",
-    "imes": "^0.14.0"
+    "imes": "^0.16.0"
   },
   "devDependencies": {
     "@types/jest": "^26.0.3",
