@@ -71,7 +71,7 @@ const cursors = {
   u3: 'eyJ0ZWFtSWQiOiJ0MSIsImlkIjoidTMifQ==',
 }
 
-test('AuroraPostgresStore#put', async () => {
+test('DynamoDBStore#put', async () => {
   client.put = jest.fn(() => ({
     promise: jest.fn().mockResolvedValue({}),
   })) as any
@@ -84,7 +84,7 @@ test('AuroraPostgresStore#put', async () => {
   })
 })
 
-test('AuroraPostgresStore#get', async () => {
+test('DynamoDBStore#get', async () => {
   client.get = jest.fn(() => ({
     promise: jest.fn().mockResolvedValue({ Item: user1 }),
   })) as any
@@ -97,7 +97,7 @@ test('AuroraPostgresStore#get', async () => {
   })
 })
 
-test('AuroraPostgresStore#get a non existant key', async () => {
+test('DynamoDBStore#get a non existant key', async () => {
   client.get = jest.fn(() => ({
     promise: jest.fn().mockResolvedValue({}),
   })) as any
@@ -105,7 +105,7 @@ test('AuroraPostgresStore#get a non existant key', async () => {
   expect(await store.get({ teamId: 't1', id: 'dne' })).toEqual(undefined)
 })
 
-test('AuroraPostgresStore#find', async () => {
+test('DynamoDBStore#find', async () => {
   client.scan = jest.fn(() => ({
     promise: jest.fn().mockResolvedValue({ Items: [user1, user2, user3] }),
   })) as any
@@ -125,7 +125,7 @@ test('AuroraPostgresStore#find', async () => {
   })
 })
 
-test('AuroraPostgresStore#find with limit', async () => {
+test('DynamoDBStore#find with limit', async () => {
   client.scan = jest.fn(() => ({
     promise: jest.fn().mockResolvedValue({
       Items: [user1, user2],
@@ -148,7 +148,7 @@ test('AuroraPostgresStore#find with limit', async () => {
   })
 })
 
-test('AuroraPostgresStore#find with limit and cursor', async () => {
+test('DynamoDBStore#find with limit and cursor', async () => {
   client.scan = jest.fn(() => ({
     promise: jest.fn().mockResolvedValue({ Items: [user2, user3] }),
   })) as any
@@ -169,7 +169,7 @@ test('AuroraPostgresStore#find with limit and cursor', async () => {
   })
 })
 
-test('AuroraPostgresStore#find with eq filter', async () => {
+test('DynamoDBStore#find with eq filter', async () => {
   client.scan = jest.fn(() => ({
     promise: jest.fn().mockResolvedValue({ Items: [user3] }),
   })) as any
@@ -192,7 +192,7 @@ test('AuroraPostgresStore#find with eq filter', async () => {
   })
 })
 
-test('AuroraPostgresStore#find with multiple filters', async () => {
+test('DynamoDBStore#find with multiple filters', async () => {
   client.scan = jest.fn(() => ({
     promise: jest.fn().mockResolvedValue({ Items: [user1] }),
   })) as any
