@@ -73,6 +73,16 @@ export class DynamoDBStore<
     return item
   }
 
+  async put(item: I) {
+    return this.client
+      .put({
+        TableName: this.tableName,
+        Item: this.serializeItem(item),
+      })
+      .promise()
+      .then(() => undefined)
+  }
+
   async get(key: DynamoDBStoreKey<I, PK, SK>) {
     return this.client
       .get({
@@ -83,20 +93,6 @@ export class DynamoDBStore<
       .then(({ Item }) => {
         if (Item) return this.deserializeItem(Item)
       })
-  }
-
-  async create(item: I) {
-    return this.update(item)
-  }
-
-  async update(item: I) {
-    return this.client
-      .put({
-        TableName: this.tableName,
-        Item: this.serializeItem(item),
-      })
-      .promise()
-      .then(() => undefined)
   }
 
   getItemKey(item: I) {

@@ -67,25 +67,12 @@ const cursors = {
   u3: 'eyJpZCI6InUzIn0=',
 }
 
-test('AuroraPostgresStore#create', async () => {
+test('AuroraPostgresStore#put', async () => {
   client.put = jest.fn(() => ({
     promise: jest.fn().mockResolvedValue({}),
   })) as any
 
-  await store.create(user1)
-
-  expect(client.put).toHaveBeenCalledWith({
-    ...commonQueryParams,
-    Item: user1,
-  })
-})
-
-test('AuroraPostgresStore#update', async () => {
-  client.put = jest.fn(() => ({
-    promise: jest.fn().mockResolvedValue({}),
-  })) as any
-
-  await store.update(user1)
+  await store.put(user1)
 
   expect(client.put).toHaveBeenCalledWith({
     ...commonQueryParams,
